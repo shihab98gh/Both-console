@@ -103,7 +103,6 @@ def poll_site(site_name, base_url, logs_list, seen_ids):
                         seen_ids.add(log_id)
                         if len(logs_list) > MAX_LOGS:
                             logs_list.pop()
-                # Prevent memory leak
                 if len(seen_ids) > 1000:
                     keep = list(seen_ids)[-500:]
                     seen_ids.clear()
@@ -134,11 +133,8 @@ def monitor_loop():
 
     while True:
         cycle_start = time.time()
-
-        # Poll Mnitnetwork, then Stexsms (sequential, no extra sleep)
         poll_site("Mnitnetwork", MNIT_BASE_URL, logs_mnit, seen_mnit)
         poll_site("Stexsms", STEX_BASE_URL, logs_stex, seen_stex)
-
         elapsed = time.time() - cycle_start
         sleep_time = max(0, POLL_INTERVAL - elapsed) + uniform(-0.5, 0.5)
         if sleep_time < 0.1:
@@ -146,7 +142,7 @@ def monitor_loop():
         time.sleep(sleep_time)
 
 
-# ---------- FRONTEND ----------
+# ---------- FRONTEND (butter-smooth animations) ----------
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
@@ -168,29 +164,37 @@ HTML_TEMPLATE = """
             background: linear-gradient(to right, #00b4d8, #90e0ef);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             text-transform: uppercase; letter-spacing: 2px;
+            animation: fadeInDown 0.6s ease;
         }
         .button-group { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .btn {
             border: none; border-radius: 50px; padding: 10px 20px;
             font-size: 0.9rem; font-weight: 600; cursor: pointer;
-            transition: all 0.3s ease; background: #2a2a4a; color: #aaa;
+            transition: all 0.25s ease; background: #2a2a4a; color: #aaa;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3); letter-spacing: 0.5px;
             white-space: nowrap;
+            will-change: transform, box-shadow;
         }
-        .btn.active, .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
+        .btn.active { transform: translateY(-2px); }
         .site-btn.active { background: linear-gradient(135deg, #00b4d8, #0077b6); color: white; }
         .filter-btn.active { background: linear-gradient(135deg, #fca311, #ffb703); color: #1a1a2e; }
         .filter-btn[data-filter="instagram"].active {
             background: linear-gradient(135deg, #E1306C, #F77737);
             color: white;
         }
+
+        /* Card animations */
         .card {
             background: rgba(255,255,255,0.05); backdrop-filter: blur(12px);
             border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
             padding: 16px; margin-bottom: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: transform 0.2s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: fadeInUp 0.35s ease forwards;
+            transition: transform 0.2s ease;
+            will-change: transform;
         }
-        .card:hover { transform: scale(1.01); }
+        .card:hover { transform: scale(1.02); }
         .row {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px;
@@ -201,15 +205,28 @@ HTML_TEMPLATE = """
         .data-item { background: rgba(0,0,0,0.2); border-radius: 8px; padding: 8px; }
         .label { font-size: 0.65rem; text-transform: uppercase; color: #8d99ae; margin-bottom: 4px; }
         .val { font-size: 0.85rem; font-weight: 600; color: #e0e0e0; word-break: break-all; }
-        .copy-number { cursor: pointer; padding: 2px 4px; border-radius: 4px; }
-        .copy-number:hover { background-color: rgba(0,180,216,0.2); }
+        .copy-number { cursor: pointer; padding: 2px 4px; border-radius: 4px; transition: background-color 0.2s; }
+        .copy-number:hover { background-color: rgba(0,180,216,0.25); }
         .sms-box {
             background: rgba(255,70,70,0.1); border: 1px dashed rgba(255,100,100,0.3);
             padding: 12px; border-radius: 10px; margin-top: 12px;
         }
         .sms-text { color: #ff6b6b; font-weight: 700; font-family: 'Courier New', monospace; font-size: 1rem; word-break: break-all; }
-        #status { text-align:center; margin-top:30px; color:#6c757d; font-size:0.8rem; }
-        .no-logs { text-align:center; padding:40px; color:#999; font-style:italic; }
+        #status { text-align:center; margin-top:30px; color:#6c757d; font-size:0.8rem; animation: fadeIn 0.5s; }
+        .no-logs { text-align:center; padding:40px; color:#999; font-style:italic; animation: fadeIn 0.6s; }
+
+        /* Keyframes */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; } to { opacity: 1; }
+        }
         @media (max-width:480px) {
             .data-grid { grid-template-columns:1fr 1fr; }
             .btn { padding:8px 14px; font-size:0.8rem; }
@@ -218,7 +235,7 @@ HTML_TEMPLATE = """
 </head>
 <body>
     <div class="container">
-        <div class="header"><h1>TSB Console Live</h1></div>
+        <div class="header"><h1>ORBIT lIVE CONSOLE</h1></div>
         <div class="button-group" id="siteButtons">
             <button class="btn site-btn active" data-site="mnitnetwork">Mnitnetwork</button>
             <button class="btn site-btn" data-site="stexsms">Stexsms</button>
@@ -233,34 +250,49 @@ HTML_TEMPLATE = """
         <div id="status"></div>
     </div>
     <script>
-        const REFRESH_MS = 5000;
+        const REFRESH_MS = 3000;  // faster refresh for real-time feel
         let currentSite = 'mnitnetwork';
         let currentFilter = 'all';
 
-        document.getElementById('siteButtons').addEventListener('click', e => {
-            const btn = e.target.closest('.site-btn');
-            if (!btn) return;
+        // Smooth button updates
+        function setActiveSite(btn) {
             document.querySelectorAll('.site-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentSite = btn.dataset.site;
             loadLogs();
-        });
+        }
 
-        document.getElementById('filterButtons').addEventListener('click', e => {
-            const btn = e.target.closest('.filter-btn');
-            if (!btn) return;
+        function setActiveFilter(btn) {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentFilter = btn.dataset.filter;
             loadLogs();
+        }
+
+        document.getElementById('siteButtons').addEventListener('click', e => {
+            const btn = e.target.closest('.site-btn');
+            if (btn) setActiveSite(btn);
         });
+
+        document.getElementById('filterButtons').addEventListener('click', e => {
+            const btn = e.target.closest('.filter-btn');
+            if (btn) setActiveFilter(btn);
+        });
+
+        // Efficient rendering: only update if data changed
+        let lastLogsKey = '';
 
         async function loadLogs() {
             try {
                 const res = await fetch(`/api/logs?site=${currentSite}&filter=${currentFilter}`);
                 const data = await res.json();
+                const key = JSON.stringify(data);
+                if (key === lastLogsKey) return;  // no new data, skip DOM update
+                lastLogsKey = key;
+
                 const container = document.getElementById('logs');
                 const status = document.getElementById('status');
+
                 if (!data.length) {
                     container.innerHTML = '<div class="no-logs">Waiting for SMS...</div>';
                 } else {
@@ -297,6 +329,7 @@ HTML_TEMPLATE = """
             }
         }
 
+        // Copy number with feedback
         document.getElementById('logs').addEventListener('click', e => {
             const target = e.target.closest('.copy-number');
             if (!target) return;
@@ -338,13 +371,11 @@ def home():
 def get_logs():
     site = request.args.get('site', 'mnitnetwork').lower()
     filter_type = request.args.get('filter', 'all').lower()
-
     logs = logs_stex if site == 'stexsms' else logs_mnit
 
     if filter_type == 'all':
         return jsonify(logs)
 
-    # Enhanced filtering
     filtered = []
     for log in logs:
         app_lower = log['app'].lower()
@@ -354,14 +385,9 @@ def get_logs():
         if filter_type == 'facebook':
             if 'facebook' in app_lower or 'facebook' in range_lower:
                 filtered.append(log)
-
         elif filter_type == 'instagram':
-            # Check app, range, AND message content
-            if ('instagram' in app_lower or
-                'instagram' in range_lower or
-                'instagram' in msg_lower):
+            if 'instagram' in app_lower or 'instagram' in range_lower or 'instagram' in msg_lower:
                 filtered.append(log)
-
         elif filter_type == 'whatsapp':
             if 'whatsapp' in app_lower or 'whatsapp' in range_lower:
                 filtered.append(log)
