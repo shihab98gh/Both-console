@@ -235,7 +235,7 @@ HTML_TEMPLATE = """
 </head>
 <body>
     <div class="container">
-        <div class="header"><h1>ORBIT lIVE CONSOLE</h1></div>
+        <div class="header"><h1>TSB Console Live</h1></div>
         <div class="button-group" id="siteButtons">
             <button class="btn site-btn active" data-site="mnitnetwork">Mnitnetwork</button>
             <button class="btn site-btn" data-site="stexsms">Stexsms</button>
@@ -383,13 +383,19 @@ def get_logs():
         msg_lower = log['message'].lower()
 
         if filter_type == 'facebook':
-            if 'facebook' in app_lower or 'facebook' in range_lower:
+            if ('facebook' in app_lower or 
+                'facebook' in range_lower or 
+                'facebook' in msg_lower):
                 filtered.append(log)
         elif filter_type == 'instagram':
-            if 'instagram' in app_lower or 'instagram' in range_lower or 'instagram' in msg_lower:
+            if ('instagram' in app_lower or 
+                'instagram' in range_lower or 
+                'instagram' in msg_lower):
                 filtered.append(log)
         elif filter_type == 'whatsapp':
-            if 'whatsapp' in app_lower or 'whatsapp' in range_lower:
+            if ('whatsapp' in app_lower or 
+                'whatsapp' in range_lower or 
+                'whatsapp' in msg_lower):
                 filtered.append(log)
 
     return jsonify(filtered)
