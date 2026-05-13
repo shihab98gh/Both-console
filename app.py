@@ -254,7 +254,6 @@ HTML_TEMPLATE = """
         let currentSite = 'mnitnetwork';
         let currentFilter = 'all';
 
-        // Smooth button updates
         function setActiveSite(btn) {
             document.querySelectorAll('.site-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -279,7 +278,6 @@ HTML_TEMPLATE = """
             if (btn) setActiveFilter(btn);
         });
 
-        // Efficient rendering: only update if data changed
         let lastLogsKey = '';
 
         async function loadLogs() {
@@ -329,7 +327,6 @@ HTML_TEMPLATE = """
             }
         }
 
-        // Copy number with feedback
         document.getElementById('logs').addEventListener('click', e => {
             const target = e.target.closest('.copy-number');
             if (!target) return;
@@ -378,24 +375,16 @@ def get_logs():
 
     filtered = []
     for log in logs:
-        app_lower = log['app'].lower()
-        range_lower = log['range'].lower()
         msg_lower = log['message'].lower()
 
         if filter_type == 'facebook':
-            if ('facebook' in app_lower or 
-                'facebook' in range_lower or 
-                'facebook' in msg_lower):
+            if 'facebook' in msg_lower:
                 filtered.append(log)
         elif filter_type == 'instagram':
-            if ('instagram' in app_lower or 
-                'instagram' in range_lower or 
-                'instagram' in msg_lower):
+            if 'instagram' in msg_lower:
                 filtered.append(log)
         elif filter_type == 'whatsapp':
-            if ('whatsapp' in app_lower or 
-                'whatsapp' in range_lower or 
-                'whatsapp' in msg_lower):
+            if 'whatsapp' in msg_lower:
                 filtered.append(log)
 
     return jsonify(filtered)
